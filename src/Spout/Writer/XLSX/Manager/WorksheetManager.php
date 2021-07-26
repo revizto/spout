@@ -39,6 +39,15 @@ class WorksheetManager implements WorksheetManagerInterface
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 EOD;
 
+    const FIRST_PANE_FROZEN = <<<'EOD'
+<sheetViews>
+<sheetView showRowColHeaders="1" showGridLines="true" workbookViewId="0" tabSelected="1">
+<pane state="frozen" activePane="bottomLeft" topLeftCell="A2" ySplit="1"/>
+<selection sqref="A1" activeCell="A1" pane="bottomLeft"/>
+</sheetView>
+</sheetViews>')
+EOD;
+
     /** @var bool Whether inline or shared strings should be used */
     protected $shouldUseInlineStrings;
 
@@ -114,6 +123,9 @@ EOD;
         $worksheet->setFilePointer($sheetFilePointer);
 
         \fwrite($sheetFilePointer, self::SHEET_XML_FILE_HEADER);
+        if ($worksheet->isPaneFrozen()) {
+            \fwrite($sheetFilePointer, self::FIRST_PANE_FROZEN);
+        }
         \fwrite($sheetFilePointer, '<sheetData>');
     }
 
@@ -236,7 +248,21 @@ EOD;
         $cellXML .= ' s="' . $styleId . '"';
 
         if ($cell->isString()) {
-            $cellXML .= $this->getCellXMLFragmentForNonEmptyString($cell->getValue());
+            $matches = array();
+            if (preg_match('/=HYPERLINK\([\'"](.*)[\'"],\s*[\'"](.*)[\'"]\)/', $cell->getValue(), $matches)) {
+                if ($this->stringHelper->getStringLength($cell->getValue()) > self::MAX_CHARACTERS_PER_CELL) {
+                    throw new InvalidArgumentException('Trying to add a value that exceeds the maximum number of characters allowed in a cell (32,767)');
+                }
+                // Special case to add HYPERLINK Formula
+                $url = $this->stringsEscaper->escape($matches[1]);
+                $text = $this->stringsEscaper->escape($matches[2]);
+                $formula = sprintf('HYPERLINK("%s","%s")', $url, $text);
+                $cellXML = sprintf(
+                    '<c r="%s%s" t="str"><f>%s</f><v>%s</v></c>',
+                    $columnLetters, $rowIndexOneBased, $formula, $text);
+            }else {
+                $cellXML .= $this->getCellXMLFragmentForNonEmptyString($cell->getValue());
+            }
         } elseif ($cell->isBoolean()) {
             $cellXML .= ' t="b"><v>' . (int) ($cell->getValue()) . '</v></c>';
         } elseif ($cell->isNumeric()) {

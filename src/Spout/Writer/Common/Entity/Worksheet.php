@@ -23,6 +23,8 @@ class Worksheet
     /** @var int Index of the last written row */
     private $lastWrittenRowIndex;
 
+    private $paneFrozen = false;
+
     /**
      * Worksheet constructor.
      *
@@ -109,5 +111,21 @@ class Worksheet
     {
         // sheet index is zero-based, while ID is 1-based
         return $this->externalSheet->getIndex() + 1;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPaneFrozen(): bool
+    {
+        return $this->paneFrozen;
+    }
+
+    /**
+     * @param bool $paneFrozen
+     */
+    public function setPaneFrozen(bool $paneFrozen): void
+    {
+        $this->paneFrozen = $paneFrozen;
     }
 }
