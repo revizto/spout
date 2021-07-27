@@ -27,6 +27,8 @@ class Sheet
     /** @var SheetManager Sheet manager */
     private $sheetManager;
 
+    private $paneFrozen = false;
+
     /**
      * @param int $sheetIndex Index of the sheet, based on order in the workbook (zero-based)
      * @param string $associatedWorkbookId ID of the sheet's associated workbook
@@ -107,5 +109,21 @@ class Sheet
         $this->isVisible = $isVisible;
 
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPaneFrozen(): bool
+    {
+        return $this->paneFrozen;
+    }
+
+    /**
+     * @param bool $paneFrozen
+     */
+    public function setPaneFrozen(bool $paneFrozen): void
+    {
+        $this->paneFrozen = $paneFrozen;
     }
 }

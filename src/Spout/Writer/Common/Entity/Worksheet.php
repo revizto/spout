@@ -118,14 +118,6 @@ class Worksheet
      */
     public function isPaneFrozen(): bool
     {
-        return $this->paneFrozen;
-    }
-
-    /**
-     * @param bool $paneFrozen
-     */
-    public function setPaneFrozen(bool $paneFrozen): void
-    {
-        $this->paneFrozen = $paneFrozen;
+        return $this->externalSheet->isPaneFrozen();
     }
 }

@@ -4,7 +4,7 @@
     "type": "library",
     "keywords": ["php","read","write","csv","xlsx","ods","odf","open","office","excel","spreadsheet","scale","memory","stream","ooxml"],
     "license": "Apache-2.0",
-    "homepage": "https://www.github.com/box/spout",
+    "homepage": "https://www.github.com/revizto/spout",
     "authors": [
         {
             "name": "Adrien Loison",
