@@ -258,8 +258,8 @@ EOD;
                 $text = $this->stringsEscaper->escape($matches[2]);
                 $formula = sprintf('HYPERLINK("%s","%s")', $url, $text);
                 $cellXML = sprintf(
-                    '<c r="%s%s" t="str"><f>%s</f><v>%s</v></c>',
-                    $columnLetters, $rowIndexOneBased, $formula, $text);
+                    '<c r="%s%s" s="%d" t="str"><f>%s</f><v>%s</v></c>',
+                    $columnLetters, $rowIndexOneBased, $styleId, $formula, $text);
             }else {
                 $cellXML .= $this->getCellXMLFragmentForNonEmptyString($cell->getValue());
             }

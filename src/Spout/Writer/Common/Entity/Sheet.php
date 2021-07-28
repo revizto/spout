@@ -27,7 +27,7 @@ class Sheet
     /** @var SheetManager Sheet manager */
     private $sheetManager;
 
-    private $paneFrozen = false;
+    private static $paneFrozen = false;
 
     /**
      * @param int $sheetIndex Index of the sheet, based on order in the workbook (zero-based)
@@ -116,14 +116,14 @@ class Sheet
      */
     public function isPaneFrozen(): bool
     {
-        return $this->paneFrozen;
+        return self::$paneFrozenn;
     }
 
     /**
      * @param bool $paneFrozen
      */
-    public function setPaneFrozen(bool $paneFrozen): void
+    public static function setPaneFrozen(bool $paneFrozen): void
     {
-        $this->paneFrozen = $paneFrozen;
+        self::$paneFrozen = $paneFrozen;
     }
 }
