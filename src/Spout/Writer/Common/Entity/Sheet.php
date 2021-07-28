@@ -116,7 +116,7 @@ class Sheet
      */
     public function isPaneFrozen(): bool
     {
-        return self::$paneFrozenn;
+        return self::$paneFrozen;
     }
 
     /**
