@@ -154,6 +154,22 @@ abstract class WriterMultiSheetsAbstract extends WriterAbstract
     }
 
     /**
+     * @param float $width
+     * @param int $column
+     * @throws WriterAlreadyOpenedException
+     */
+    public function setForceColumnWidth(float $width, int $column)
+    {
+        $this->throwIfWriterAlreadyOpened('Writer must be configured before opening it.');
+        $columnWidths = $this->optionsManager->getOption(Options::COLUMN_WIDTHS);
+        $columnWidths[] = [$column,$column,$width];
+        $this->optionsManager->setOption(
+            Options::COLUMN_WIDTHS,
+            $columnWidths
+        );
+    }
+
+    /**
      * @param float $height
      * @throws WriterAlreadyOpenedException
      */

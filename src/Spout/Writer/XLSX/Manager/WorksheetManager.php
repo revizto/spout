@@ -132,6 +132,7 @@ EOD;
         if ($worksheet->isPaneFrozen()) {
             \fwrite($sheetFilePointer, self::FIRST_PANE_FROZEN);
         }
+        $this->ensureSheetDataStated($worksheet);
         \fwrite($sheetFilePointer, '<sheetData>');
     }
 
@@ -143,13 +144,9 @@ EOD;
      */
     private function ensureSheetDataStated(Worksheet $worksheet)
     {
-        if (!$worksheet->getSheetDataStarted()) {
-            $worksheetFilePointer = $worksheet->getFilePointer();
-            \fwrite($worksheetFilePointer, $this->getXMLFragmentForDefaultCellSizing());
-            \fwrite($worksheetFilePointer, $this->getXMLFragmentForColumnWidths());
-            \fwrite($worksheetFilePointer, '<sheetData>');
-            $worksheet->setSheetDataStarted(true);
-        }
+        $worksheetFilePointer = $worksheet->getFilePointer();
+        \fwrite($worksheetFilePointer, $this->getXMLFragmentForDefaultCellSizing());
+        \fwrite($worksheetFilePointer, $this->getXMLFragmentForColumnWidths());
     }
 
     /**
@@ -189,7 +186,6 @@ EOD;
      */
     private function addNonEmptyRow(Worksheet $worksheet, Row $row)
     {
-        $this->ensureSheetDataStated($worksheet);
         $sheetFilePointer = $worksheet->getFilePointer();
         $rowStyle = $row->getStyle();
         $rowIndexOneBased = $worksheet->getLastWrittenRowIndex() + 1;
@@ -280,7 +276,9 @@ EOD;
                     throw new InvalidArgumentException('Trying to add a value that exceeds the maximum number of characters allowed in a cell (32,767)');
                 }
                 // Special case to add HYPERLINK Formula
+                $matches[1] = str_replace('"','"&CHAR(34)&"',$matches[1]);
                 $url = $this->stringsEscaper->escape($matches[1]);
+                $matches[2] = str_replace('"','"&CHAR(34)&"',$matches[2]);
                 $text = $this->stringsEscaper->escape($matches[2]);
                 $formula = sprintf('HYPERLINK("%s","%s")', $url, $text);
                 $cellXML = sprintf(
@@ -348,7 +346,7 @@ EOD;
         }
         $xml = '<cols>';
         foreach ($this->columnWidths as $entry) {
-            $xml .= '<col min="' . $entry[0] . '" max="' . $entry[1] . '" width="' . $entry[2] . '" customWidth="true"/>';
+            $xml .= '<col min="' . $entry[0] . '" max="' . $entry[1] . '" width="' . $entry[2] . '" bestFit="true" customWidth="true"/>';
         }
         $xml .= '</cols>';
 
@@ -383,7 +381,6 @@ EOD;
         if (!\is_resource($worksheetFilePointer)) {
             return;
         }
-        $this->ensureSheetDataStated($worksheet);
         \fwrite($worksheetFilePointer, '</sheetData>');
         \fwrite($worksheetFilePointer, '</worksheet>');
         \fclose($worksheetFilePointer);
