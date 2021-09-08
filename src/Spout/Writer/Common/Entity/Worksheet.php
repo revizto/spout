@@ -25,6 +25,9 @@ class Worksheet
 
     private $paneFrozen = false;
 
+    /** @var bool has the sheet data header been written */
+    private $sheetDataStarted = false;
+
     /**
      * Worksheet constructor.
      *
@@ -38,6 +41,7 @@ class Worksheet
         $this->externalSheet = $externalSheet;
         $this->maxNumColumns = 0;
         $this->lastWrittenRowIndex = 0;
+        $this->sheetDataStarted = false;
     }
 
     /**
@@ -119,5 +123,21 @@ class Worksheet
     public function isPaneFrozen(): bool
     {
         return $this->externalSheet->isPaneFrozen();
+    }
+
+    /**
+     * @return bool
+     */
+    public function getSheetDataStarted()
+    {
+        return $this->sheetDataStarted;
+    }
+
+    /**
+     * @param bool $sheetDataStarted
+     */
+    public function setSheetDataStarted($sheetDataStarted)
+    {
+        $this->sheetDataStarted = $sheetDataStarted;
     }
 }

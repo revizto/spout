@@ -15,6 +15,7 @@ use Box\Spout\Writer\Common\Entity\Options;
 use Box\Spout\Writer\Common\Entity\Worksheet;
 use Box\Spout\Writer\Common\Helper\CellHelper;
 use Box\Spout\Writer\Common\Manager\RegisteredStyle;
+use Box\Spout\Writer\Common\Manager\ManagesCellSize;
 use Box\Spout\Writer\Common\Manager\RowManager;
 use Box\Spout\Writer\Common\Manager\Style\StyleMerger;
 use Box\Spout\Writer\Common\Manager\WorksheetManagerInterface;
@@ -26,6 +27,8 @@ use Box\Spout\Writer\XLSX\Manager\Style\StyleManager;
  */
 class WorksheetManager implements WorksheetManagerInterface
 {
+    use ManagesCellSize;
+
     /**
      * Maximum number of characters a cell can contain
      * @see https://support.office.com/en-us/article/Excel-specifications-and-limits-16c69c74-3d6a-4aaf-ba35-e6eb276e8eaa [Excel 2007]
@@ -95,6 +98,9 @@ EOD;
         InternalEntityFactory $entityFactory
     ) {
         $this->shouldUseInlineStrings = $optionsManager->getOption(Options::SHOULD_USE_INLINE_STRINGS);
+        $this->setDefaultColumnWidth($optionsManager->getOption(Options::DEFAULT_COLUMN_WIDTH));
+        $this->setDefaultRowHeight($optionsManager->getOption(Options::DEFAULT_ROW_HEIGHT));
+        $this->columnWidths = $optionsManager->getOption(Options::COLUMN_WIDTHS) ?? [];
         $this->rowManager = $rowManager;
         $this->styleManager = $styleManager;
         $this->styleMerger = $styleMerger;
@@ -130,6 +136,23 @@ EOD;
     }
 
     /**
+     * Writes the sheet data header
+     *
+     * @param Worksheet $worksheet The worksheet to add the row to
+     * @return void
+     */
+    private function ensureSheetDataStated(Worksheet $worksheet)
+    {
+        if (!$worksheet->getSheetDataStarted()) {
+            $worksheetFilePointer = $worksheet->getFilePointer();
+            \fwrite($worksheetFilePointer, $this->getXMLFragmentForDefaultCellSizing());
+            \fwrite($worksheetFilePointer, $this->getXMLFragmentForColumnWidths());
+            \fwrite($worksheetFilePointer, '<sheetData>');
+            $worksheet->setSheetDataStarted(true);
+        }
+    }
+
+    /**
      * Checks if the sheet has been sucessfully created. Throws an exception if not.
      *
      * @param bool|resource $sheetFilePointer Pointer to the sheet data file or FALSE if unable to open the file
@@ -160,17 +183,20 @@ EOD;
      *
      * @param Worksheet $worksheet The worksheet to add the row to
      * @param Row $row The row to be written
-     * @throws IOException If the data cannot be written
      * @throws InvalidArgumentException If a cell value's type is not supported
+     * @throws IOException If the data cannot be written
      * @return void
      */
     private function addNonEmptyRow(Worksheet $worksheet, Row $row)
     {
+        $this->ensureSheetDataStated($worksheet);
+        $sheetFilePointer = $worksheet->getFilePointer();
         $rowStyle = $row->getStyle();
         $rowIndexOneBased = $worksheet->getLastWrittenRowIndex() + 1;
         $numCells = $row->getNumCells();
 
-        $rowXML = '<row r="' . $rowIndexOneBased . '" spans="1:' . $numCells . '">';
+        $hasCustomHeight = $this->defaultRowHeight > 0 ? '1' : '0';
+        $rowXML = "<row r=\"{$rowIndexOneBased}\" spans=\"1:{$numCells}\" customHeight=\"{$hasCustomHeight}\">";
 
         foreach ($row->getCells() as $columnIndexZeroBased => $cell) {
             $registeredStyle = $this->applyStyleAndRegister($cell, $rowStyle);
@@ -183,7 +209,7 @@ EOD;
 
         $rowXML .= '</row>';
 
-        $wasWriteSuccessful = \fwrite($worksheet->getFilePointer(), $rowXML);
+        $wasWriteSuccessful = \fwrite($sheetFilePointer, $rowXML);
         if ($wasWriteSuccessful === false) {
             throw new IOException("Unable to write data in {$worksheet->getFilePath()}");
         }
@@ -192,7 +218,7 @@ EOD;
     /**
      * Applies styles to the given style, merging the cell's style with its row's style
      *
-     * @param Cell  $cell
+     * @param Cell $cell
      * @param Style $rowStyle
      *
      * @throws InvalidArgumentException If the given value cannot be processed
@@ -233,10 +259,10 @@ EOD;
     /**
      * Builds and returns xml for a single cell.
      *
-     * @param int  $rowIndexOneBased
-     * @param int  $columnIndexZeroBased
+     * @param int $rowIndexOneBased
+     * @param int $columnIndexZeroBased
      * @param Cell $cell
-     * @param int  $styleId
+     * @param int $styleId
      *
      * @throws InvalidArgumentException If the given value cannot be processed
      * @return string
@@ -311,6 +337,43 @@ EOD;
     }
 
     /**
+     * Construct column width references xml to inject into worksheet xml file
+     *
+     * @return string
+     */
+    public function getXMLFragmentForColumnWidths()
+    {
+        if (empty($this->columnWidths)) {
+            return '';
+        }
+        $xml = '<cols>';
+        foreach ($this->columnWidths as $entry) {
+            $xml .= '<col min="' . $entry[0] . '" max="' . $entry[1] . '" width="' . $entry[2] . '" customWidth="true"/>';
+        }
+        $xml .= '</cols>';
+
+        return $xml;
+    }
+
+    /**
+     * Constructs default row height and width xml to inject into worksheet xml file
+     *
+     * @return string
+     */
+    public function getXMLFragmentForDefaultCellSizing()
+    {
+        $rowHeightXml = empty($this->defaultRowHeight) ? '' : " defaultRowHeight=\"{$this->defaultRowHeight}\"";
+        $colWidthXml = empty($this->defaultColumnWidth) ? '' : " defaultColWidth=\"{$this->defaultColumnWidth}\"";
+        if (empty($colWidthXml) && empty($rowHeightXml)) {
+            return '';
+        }
+        // Ensure that the required defaultRowHeight is set
+        $rowHeightXml = empty($rowHeightXml) ? ' defaultRowHeight="0"' : $rowHeightXml;
+
+        return "<sheetFormatPr{$colWidthXml}{$rowHeightXml}/>";
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function close(Worksheet $worksheet)
@@ -320,7 +383,7 @@ EOD;
         if (!\is_resource($worksheetFilePointer)) {
             return;
         }
-
+        $this->ensureSheetDataStated($worksheet);
         \fwrite($worksheetFilePointer, '</sheetData>');
         \fwrite($worksheetFilePointer, '</worksheet>');
         \fclose($worksheetFilePointer);
