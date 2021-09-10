@@ -44,9 +44,16 @@ EOD;
 
     const FIRST_PANE_FROZEN = <<<'EOD'
 <sheetViews>
-<sheetView showRowColHeaders="1" showGridLines="true" workbookViewId="0" tabSelected="1">
+<sheetView showRowColHeaders="1" showGridLines="true" workbookViewId="0">
 <pane state="frozen" activePane="bottomLeft" topLeftCell="A2" ySplit="1"/>
 <selection sqref="A1" activeCell="A1" pane="bottomLeft"/>
+</sheetView>
+</sheetViews>')
+EOD;
+
+    const EMPTY_HEADER = <<<'EOD'
+<sheetViews>
+<sheetView showRowColHeaders="1" showGridLines="true" workbookViewId="0" %s>
 </sheetView>
 </sheetViews>')
 EOD;
@@ -75,6 +82,8 @@ EOD;
     /** @var InternalEntityFactory Factory to create entities */
     private $entityFactory;
 
+    private $defaultActiveSheet = 1;
+
     /**
      * WorksheetManager constructor.
      *
@@ -101,6 +110,7 @@ EOD;
         $this->setDefaultColumnWidth($optionsManager->getOption(Options::DEFAULT_COLUMN_WIDTH));
         $this->setDefaultRowHeight($optionsManager->getOption(Options::DEFAULT_ROW_HEIGHT));
         $this->columnWidths = $optionsManager->getOption(Options::COLUMN_WIDTHS) ?? [];
+        $this->defaultActiveSheet = $optionsManager->getOption(Options::DEFAULT_ACTIVE_SHEET) ?? 0;
         $this->rowManager = $rowManager;
         $this->styleManager = $styleManager;
         $this->styleMerger = $styleMerger;

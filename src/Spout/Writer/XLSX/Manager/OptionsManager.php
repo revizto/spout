@@ -42,6 +42,7 @@ class OptionsManager extends OptionsManagerAbstract
             Options::DEFAULT_COLUMN_WIDTH,
             Options::DEFAULT_ROW_HEIGHT,
             Options::COLUMN_WIDTHS,
+            Options::DEFAULT_ACTIVE_SHEET
         ];
     }
 

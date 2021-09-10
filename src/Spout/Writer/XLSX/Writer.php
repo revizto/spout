@@ -47,4 +47,8 @@ class Writer extends WriterMultiSheetsAbstract
 
         return $this;
     }
+
+    public function setDefaultActiveSheet($defaultActiveSheetIndex){
+        $this->optionsManager->setOption(Options::DEFAULT_ACTIVE_SHEET, $defaultActiveSheetIndex);
+    }
 }

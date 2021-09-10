@@ -17,6 +17,7 @@ abstract class Options
     const TEMP_FOLDER = 'tempFolder';
     const DEFAULT_ROW_STYLE = 'defaultRowStyle';
     const SHOULD_CREATE_NEW_SHEETS_AUTOMATICALLY = 'shouldCreateNewSheetsAutomatically';
+    const DEFAULT_ACTIVE_SHEET = 'defaultActiveSheet';
 
     // XLSX specific options
     const SHOULD_USE_INLINE_STRINGS = 'shouldUseInlineStrings';
