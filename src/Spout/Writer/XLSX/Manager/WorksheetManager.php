@@ -296,12 +296,13 @@ EOD;
                 // Special case to add HYPERLINK Formula
                 $matches[1] = str_replace('"','"&CHAR(34)&"',$matches[1]);
                 $url = $this->stringsEscaper->escape($matches[1]);
+                $text_value = $this->stringsEscaper->escape($matches[2]);
                 $matches[2] = str_replace('"','"&CHAR(34)&"',$matches[2]);
                 $text = $this->stringsEscaper->escape($matches[2]);
                 $formula = sprintf('HYPERLINK("%s","%s")', $url, $text);
                 $cellXML = sprintf(
                     '<c r="%s%s" s="%d" t="str"><f>%s</f><v>%s</v></c>',
-                    $columnLetters, $rowIndexOneBased, $styleId, $formula, $text);
+                    $columnLetters, $rowIndexOneBased, $styleId, $formula, $text_value);
             }else {
                 $cellXML .= $this->getCellXMLFragmentForNonEmptyString($cell->getValue());
             }
