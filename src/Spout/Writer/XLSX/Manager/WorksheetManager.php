@@ -202,7 +202,15 @@ EOD;
         $numCells = $row->getNumCells();
 
         $hasCustomHeight = $this->defaultRowHeight > 0 ? '1' : '0';
-        $rowXML = "<row r=\"{$rowIndexOneBased}\" spans=\"1:{$numCells}\" customHeight=\"{$hasCustomHeight}\">";
+
+        $collapseXMLProperty = '';
+        if($row->getCollapsed()==Row::ROW_HIDDEN){
+            $collapseXMLProperty = 'hidden="1" outlineLevel="1"';
+        }elseif ($row->getCollapsed()==Row::ROW_COLLAPSED){
+            $collapseXMLProperty = 'collapsed="1"';
+        }
+
+        $rowXML = "<row r=\"{$rowIndexOneBased}\" {$collapseXMLProperty} spans=\"1:{$numCells}\" customHeight=\"{$hasCustomHeight}\">";
 
         foreach ($row->getCells() as $columnIndexZeroBased => $cell) {
             $registeredStyle = $this->applyStyleAndRegister($cell, $rowStyle);

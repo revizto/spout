@@ -86,9 +86,9 @@ class WriterEntityFactory
      * @param Style|null $rowStyle
      * @return Row
      */
-    public static function createRow(array $cells = [], Style $rowStyle = null)
+    public static function createRow(array $cells = [], Style $rowStyle = null, $collapseState = Row::ROW_NORMAL)
     {
-        return new Row($cells, $rowStyle);
+        return new Row($cells, $rowStyle, $collapseState);
     }
 
     /**

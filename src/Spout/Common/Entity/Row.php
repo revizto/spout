@@ -6,6 +6,11 @@ use Box\Spout\Common\Entity\Style\Style;
 
 class Row
 {
+
+    const ROW_NORMAL = 0;
+    const ROW_HIDDEN = 1;
+    const ROW_COLLAPSED = 2;
+
     /**
      * The cells in this row
      * @var Cell[]
@@ -18,16 +23,21 @@ class Row
      */
     protected $style;
 
+    /** @var int */
+    protected $collapsed = self::ROW_NORMAL; // 0 - normal, 1 - hidden, 2 - collapsed
+
     /**
      * Row constructor.
      * @param Cell[] $cells
      * @param Style|null $style
      */
-    public function __construct(array $cells, $style)
+    public function __construct(array $cells, $style, $collapsed = self::ROW_NORMAL)
     {
         $this
             ->setCells($cells)
             ->setStyle($style);
+
+        $this->collapsed = $collapsed;
     }
 
     /**
@@ -125,5 +135,13 @@ class Row
         return \array_map(function (Cell $cell) {
             return $cell->getValue();
         }, $this->cells);
+    }
+
+    /**
+     * @return int
+     */
+    public function getCollapsed()
+    {
+        return $this->collapsed;
     }
 }
